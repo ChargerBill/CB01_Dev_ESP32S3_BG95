@@ -1,0 +1,31 @@
+idf_component_register(SRCS 
+    az_base64.c
+    az_context.c
+    az_http_pipeline.c
+    az_http_policy.c
+    az_http_policy_logging.c
+    az_http_policy_retry.c
+    az_http_request.c
+    az_http_response.c
+    az_iot_adu_client.c
+    az_iot_common.c
+    az_iot_hub_client.c
+    az_iot_hub_client_c2d.c
+    az_iot_hub_client_commands.c
+    az_iot_hub_client_methods.c
+    az_iot_hub_client_properties.c
+    az_iot_hub_client_sas.c
+    az_iot_hub_client_telemetry.c
+    az_iot_hub_client_twin.c
+    az_iot_provisioning_client.c
+    az_iot_provisioning_client_sas.c
+    az_json_reader.c
+    az_json_token.c
+    az_json_writer.c
+    az_log.c
+    az_nohttp.c
+    az_noplatform.c
+    az_precondition.c
+    az_span.c
+                       INCLUDE_DIRS "include"
+                       REQUIRES mbedtls)
