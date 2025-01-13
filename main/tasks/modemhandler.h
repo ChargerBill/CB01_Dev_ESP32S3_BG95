@@ -20,6 +20,8 @@
 #include "cxx_include/esp_modem_api.hpp"
 #include "cxx_include/esp_modem_types.hpp"
 #include "esp_modem_c_api_types.h"
+#include "driver/gpio.h"
+#include "hal/gpio_types.h"
 
 #include "TaskEventBits.h"
 #include "event.h"
@@ -38,10 +40,13 @@ class ModemHandler
   
   public:
     static std::string ipAddress;
+    static bool isPoweredOn;
     static bool isConnected;
     static BooleanEvent PppConnectedEvent;
 
     static void Start();
+    void PowerModemOn();
+    void PowerModemOff();
 
   private:
     dte_config dteConfig;
@@ -54,6 +59,7 @@ class ModemHandler
     static void TaskInit(void *pvParameters);
     void TaskLoop();
     
+    void PulseModemPowerKey();
     void InitModem();
     static void pppChangedEvent(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
     static void ipEvent(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);

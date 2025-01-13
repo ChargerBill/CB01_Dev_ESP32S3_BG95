@@ -1,6 +1,8 @@
 #include "ModemHandler.h"
+#include "portmacro.h"
 
 std::string ModemHandler::ipAddress = "NOT SET";
+bool ModemHandler::isPoweredOn = false;
 bool ModemHandler::isConnected = false;
 
 void ModemHandler::Start()
@@ -24,6 +26,12 @@ void ModemHandler::TaskInit(void *pvParameters)
   ESP_LOGI("ModemHandler", "Initialising Task Module");
   ModemHandler instance;
   
+  if(instance.isPoweredOn) // If the modem is already ON, switch it off first
+  {
+    instance.PowerModemOff();
+  }
+  
+  instance.PowerModemOn();
   instance.InitModem();
   instance.TaskLoop();
   
@@ -38,6 +46,49 @@ void ModemHandler::TaskLoop()
     //ESP_LOGI("ModemHandler", "Main Loop Tick (1 sec)");
     vTaskDelay(pdMS_TO_TICKS(1000));
   }
+}
+
+// This is a wierd way of doing this, as we (As of yet anyway) don't have any hardware
+// way of knowing if the modem is actually powered on or not, the dev boards we have for
+// the BG95 don't have a pin/terminal ont hem that we can monitor to know the actual modem
+// state.  The cubix boards however, I believe do, so for now we going to have to rely on
+// tracking the power state ourselves in software, just to make sure that we are/are not 
+// switching the modem off/on when we think we are.  
+void ModemHandler::PowerModemOn()
+{
+  if(!isPoweredOn)
+  {
+    ESP_LOGI("ModemHandler", "Attempting to switch modem on.");
+    PulseModemPowerKey();
+    isPoweredOn = true;
+  }
+}
+
+void ModemHandler::PowerModemOff()
+{
+  if(isPoweredOn)
+  {
+    ESP_LOGI("ModemHandler", "Attempting to switch modem off.");
+    PulseModemPowerKey();
+    isPoweredOn = false;
+  }  
+}
+
+void ModemHandler::PulseModemPowerKey()
+{
+  //gpio_set_direction(GPIO_NUM_7, GPIO_MODE_OUTPUT); // Should have been set at beginning of Application Task
+
+  ESP_LOGI("ModemHandler", "Pulling Modem Reset Line LOW for 1 second");
+  gpio_set_level(GPIO_NUM_7,0);
+  
+  vTaskDelay(1000 / portTICK_PERIOD_MS);
+  
+  ESP_LOGI("ModemHandler", "Returning Modem Reset Line HIGH and waiting for 20 seconds for modem to stabalise.");
+  gpio_set_level(GPIO_NUM_7,1);
+  
+  vTaskDelay(20000 / portTICK_PERIOD_MS);
+  
+  ESP_LOGI("ModemHandler", "Modem hard reset done...");
 }
 
 void ModemHandler::InitModem()
