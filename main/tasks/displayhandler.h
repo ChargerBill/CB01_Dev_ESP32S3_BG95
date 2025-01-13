@@ -8,14 +8,22 @@
 
 #include "esp_log.h"
 
+#include "ssd1306.h"
+
 class DisplayHandler
 {
 public:
     static void Start();
     
 private:
+
+    static SSD1306_t DisplayDevice;
+    static int TestCount; // TEST Var only. To BE REMOVED.
+
     static void TaskInit(void *pvParameters);
     void TaskLoop();
+    void InitDisplayDriver();
+    void DrawDisplay();
     
 };
 

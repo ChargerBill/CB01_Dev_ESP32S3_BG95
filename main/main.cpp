@@ -49,43 +49,6 @@ extern "C" void display_timedate()
   printf("Modem is in %d state (IP: %s)\n", AppModem->isConnected, AppModem->ipAddress.c_str());
 }
 
-//#define CONFIG_INTERFACE FART
-
-//#define CONFIG_SDA_GPIO 15
-//#define CONFIG_SCL_GPIO 16
-
-//#define CONFIG_RESET_GPIO 0
-//#define CONFIG_MODEL TWAT
-
-//#define I2C_DISPLAY_ADDRESS 0x3C         /* Display I2C address */
-
-extern "C" void testI2C()
-{
-  // quick test before doing any driver code, to test that the display can be
-  // found at 0x3C and that the I2C system is working
-  ESP_LOGI("ApplicationTask", "Testing I2C for display");
-  
-  SSD1306_t dev;
-  int center, top, bottom;
-  char lineChar[20];
-  
-  ESP_LOGI("ApplicationTask", "INTERFACE is i2c");
-  ESP_LOGI("ApplicationTask", "CONFIG_SDA_GPIO=%d",CONFIG_SDA_GPIO);
-  ESP_LOGI("ApplicationTask", "CONFIG_SCL_GPIO=%d",CONFIG_SCL_GPIO);
-  ESP_LOGI("ApplicationTask", "CONFIG_RESET_GPIO=%d",CONFIG_RESET_GPIO);
-  
-  i2c_master_init(&dev, CONFIG_SDA_GPIO, CONFIG_SCL_GPIO, CONFIG_RESET_GPIO);
-  
-  ESP_LOGI("ApplicationTask", "Panel is 128x64");
-  ssd1306_init(&dev, 128, 64);
-  
-  ssd1306_clear_screen(&dev, false);
-  ssd1306_contrast(&dev, 0xff);
-  ssd1306_display_text_x3(&dev, 0, "Hello", 5, false);
-
-  
-}
-
 // Main APPLICATION Task entry point, this is the DEFAULT FreeRTOS task created
 // by ESP-IDF to kick start the firmware.  All other tasks and modules shall be
 // spawned from here.
@@ -98,8 +61,6 @@ extern "C" void app_main(void)
   ESP_LOGI("ApplicationTask", "IDF version: %s", esp_get_idf_version());
   
   setup_gpio_defaults();
-  
-  testI2C();
   
   ESP_LOGI("ApplicationTask", "Starting ModemHandler Task...");
   AppModem = new ModemHandler();
@@ -114,8 +75,8 @@ extern "C" void app_main(void)
   AppMqtt = new MqttHandler();
   AppMqtt->Start();
   
-  //ESP_LOGI("Main", "Starting DisplayHandler Task...");
-  //DisplayHandler::StartTask();
+  ESP_LOGI("Main", "Starting DisplayHandler Task...");
+  DisplayHandler::Start();
   
   display_timedate();
   
