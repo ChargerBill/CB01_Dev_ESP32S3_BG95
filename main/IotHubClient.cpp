@@ -11,8 +11,8 @@
 #define SAS_TOKEN_DURATION_IN_MINUTES 20
 #define AZURE_SDK_CLIENT_USER_AGENT "c%2F" AZ_SDK_VERSION_STRING "(esp-idf:ESP32-S3)"
 #define IOT_CONFIG_IOTHUB_FQDN "CB-IoT-Hub-Development.azure-devices.net"
-#define IOT_CONFIG_DEVICE_ID "MQTT-SK-TEST-02"
-#define IOT_CONFIG_DEVICE_KEY "OO+W7XDaPrVhJI8BxMjXE0jeGSRv77eLM+JarHEaL8U="
+#define IOT_CONFIG_DEVICE_ID "MQTT-SK-TEST-03"
+#define IOT_CONFIG_DEVICE_KEY "+G/ANUrwuISx7mePIm5bHuj7hlu3giu5IAIoTPJxLYs="
 
 #define sizeofarray(a) (sizeof(a) / sizeof(a[0]))
 

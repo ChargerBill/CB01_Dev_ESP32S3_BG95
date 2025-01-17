@@ -28,6 +28,8 @@
 
 #define TX_PIN 17
 #define RX_PIN 18
+#define MODEM_AP_READY_SIGNAL_PIN GPIO_NUM_4
+#define MODEM_NETWORK_STATUS_PIN GPIO_NUM_11
 
 #define PPP_APN "quectel.tn.std"
 
@@ -47,6 +49,8 @@ class ModemHandler
     static void Start();
     void PowerModemOn();
     void PowerModemOff();
+    void LogGPIOStatus();
+    void CheckModemStatus();
 
   private:
     dte_config dteConfig;
@@ -63,6 +67,9 @@ class ModemHandler
     void InitModem();
     static void pppChangedEvent(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
     static void ipEvent(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data);
+    
+    void SendATCommand(const std::string &command);
+    std::string ReadATResponse();
         
 };
 
