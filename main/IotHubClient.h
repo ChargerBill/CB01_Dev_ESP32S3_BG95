@@ -23,6 +23,7 @@ class IotHubClient
     static char *GetHubClientId();
     static char *GetHubUsername();
     static char *GetHubPassword();
+    const char *GetDeviceName();
     const char *GetHubUri();
     static bool HasSasTokenExpired();
     static void GenerateSasToken();

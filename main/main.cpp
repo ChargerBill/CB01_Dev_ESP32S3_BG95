@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include "driver/gpio.h"
+#include "hal/rtc_io_types.h"
 #include "ssd1306.h"
 
 #include "freertos/FreeRTOS.h"
@@ -22,6 +23,11 @@
 ModemHandler *AppModem;
 DeviceTimeHandler *AppTime;
 MqttHandler *AppMqtt;
+DisplayHandler *AppDisplay;
+
+// Temp PINS defines, until we build a proper GPIO Task
+#define MODEM_PSM GPIO_NUM_41
+#define MODEM_NET_STATUS GPIO_NUM_11
 
 // Main application wide event group, uses flag definitions in 'TaskEventBits.h'
 EventGroupHandle_t ApplicationEvents;
@@ -32,6 +38,12 @@ extern "C" void setup_gpio_defaults()
   
   gpio_set_direction(GPIO_NUM_7, GPIO_MODE_OUTPUT);
   gpio_set_level(GPIO_NUM_7,1);
+  
+  // Modem PSM (input) on Cubix pinout
+  gpio_set_direction(MODEM_PSM, GPIO_MODE_INPUT);
+  
+  // Modem Network Status (input) on Cubix pinout
+  gpio_set_direction(MODEM_NET_STATUS, GPIO_MODE_INPUT);
   
   ESP_LOGI("ApplicationTask", "GPIO setup done...");
 }
@@ -76,7 +88,8 @@ extern "C" void app_main(void)
   AppMqtt->Start();
   
   ESP_LOGI("Main", "Starting DisplayHandler Task...");
-  DisplayHandler::Start();
+  AppDisplay = new DisplayHandler();
+  AppDisplay->Start();
   
   display_timedate();
   
@@ -85,14 +98,61 @@ extern "C" void app_main(void)
   std::string _dummyHb = "{\"tt\":\"heartbeat\", \"mrp\":true, \"is\":false, \"ia\":true, \"hpis\":true, \"mr\":654.321, \"ec\":0, \"ct\":17.00000, \"cp\":0, \"ss\":13, \"otf\":false, \"ocf\":false, \"hm\":false}";
   
   //AppMqtt->SendMqttMessageToAzure(_dummyHb);
+
+  AppDisplay->SetDisplayName(AppMqtt->FetchDeviceName());
     
   // Main application loop/task NEVER ends
   ESP_LOGI("ApplicationTask", "Starting main application task loop.");
   while (true) 
   {
-    //ESP_LOGI("APP_MAIN", "Main loop 1 second tick");
+    //ESP_LOGI("APP_MAIN", "Main loop tick");
     
     //display_timedate();
+  
+    // NOTE FOR COLIN:
+    // The following 4 AppDisplay->SetXXXXX calls, will set the first 4 flags on the display.
+    // The first one is sampling GPIO 41, which according to the Cubix diagram is the modem power indicator
+    // The second is sampling GPIO 11, which according to the Cubix diagram is the modem "network flag"
+    // The third one is reading the "PPP Connected" flag that I maintain in the ModemHandler task to tell me if modem is data connected
+    // The fourth one is reading the "MQTT Connected" flag that I maintain in the MqttHandler task to tell me when connected to IoT hub
+    //
+    // the string accross the middle is as follows " MP NW PP MQ ## "
+    // MP = Modem Power
+    // NW = Modem Network
+    // PP = PPP Connection
+    // MQ = MQTT Connection
+    // ## = Spare
+    //
+    // When not set, the flag at a given position will show '--' 
+  
+    // Update Display Status Flags
+    if(gpio_get_level(MODEM_PSM)>0) // GPIO Pin 41 (Define at top of this file)
+    {
+      AppDisplay->SetModemPowerFlag(true);
+    }
+    else
+    {
+      AppDisplay->SetModemPowerFlag(false);
+    }
+    
+    if(gpio_get_level(MODEM_NET_STATUS)>0) // GPIO Pin 11 (Define at top of this file)
+    {
+      AppDisplay->SetModemNetFlag(true);
+    }
+    else
+    {
+      AppDisplay->SetModemNetFlag(false);
+    }
+        
+    AppDisplay->SetModemPppFlag(AppModem->isConnected);  // Maintained in "ModemHandler" task
+    AppDisplay->SetMqttConnectFlag(AppMqtt->IsConnected()); // Maintained in "MqttHandler" task
+    
+    // NOTE FOR COLIN:
+    // The following line sets or doesn't set the "SPARE" flag on the display.  if this is set to true the
+    // display will show '##' in the 5th position on the display, if it is set to false then '--' will be shown.
+    // I've set this to true for now, but if the result of a GPIO Pin, or status from elswhere is put in as the
+    // parameter, then '##' will appear/disapear on the display depending on the value.
+    AppDisplay->SetSpareFlag(true);
     
     uint currentTicks = xTaskGetTickCount();
     if((currentTicks - startTicks) > (6000*10)) // 10 Minutes in tick resolution

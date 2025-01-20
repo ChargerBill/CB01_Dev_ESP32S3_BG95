@@ -14,6 +14,8 @@ bool MqttHandler::_isModemConnected = false;
 bool MqttHandler::_isMqttConnected = false;
 bool MqttHandler::_isSubscribed = false;
 
+char *MqttHandler::IoTHubDeviceName;
+
 esp_mqtt_client_handle_t MqttHandler::_client = NULL;
 IotHubClient MqttHandler::_iotClient;
 
@@ -77,11 +79,21 @@ void MqttHandler::TaskLoop()
   }
 }
 
+const char *MqttHandler::FetchDeviceName()
+{
+  return _iotClient.GetDeviceName();
+}
+
 void MqttHandler::SubscribeToNotifications()
 {
   _iotClient.SubscribeToAzureHandlers(_client);  
   _isSubscribed = true;
   
+}
+
+bool MqttHandler::IsConnected()
+{
+  return _isMqttConnected;  
 }
 
 void MqttHandler::EventHandler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)

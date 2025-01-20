@@ -18,12 +18,15 @@ class MqttHandler
   
     static void Start();
     void SendMqttMessageToAzure(std::string messageText);
+    const char *FetchDeviceName();
+    static bool IsConnected();
 
 private:
 
     static bool _hasmadewebcall;
     static bool _isModemConnected;
     static bool _isMqttConnected;
+    static char *IoTHubDeviceName;
     static esp_mqtt_client_handle_t _client;
     static IotHubClient _iotClient;
     static bool _isSubscribed;
